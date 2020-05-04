@@ -1,0 +1,7 @@
+<?xml version="1.0" ?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Backend:etc/menu.xsd">
+    <menu>
+        <add id="InXpress_InXpressRating::inxpress" title="InXpress" translate="title" module="InXpress_InXpressRating" parent="Magento_Catalog::catalog" sortOrder="50" dependsOnModule="InXpress_InXpressRating" resource="InXpress_InXpressRating::inxpress" />
+        <add id="InXpress_InXpressRating::inxpress_portal" title="Product Portal" translate="title" module="InXpress_InXpressRating" parent="InXpress_InXpressRating::inxpress" sortOrder="10" dependsOnModule="InXpress_InXpressRating" action="inxpress/register" resource="InXpress_InXpressRating::inxpress" />
+    </menu>
+</config>
