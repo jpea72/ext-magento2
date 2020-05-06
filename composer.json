@@ -10,14 +10,16 @@
         "name": "InXpress"
     }],
     "scripts": {
-        "test": "phpcs etc Model registration.php",
-        "fix": "phpcbf etc Model registration.php"
+        "test": "phpcs etc Model Controller registration.php",
+        "fix": "phpcbf etc Model Controller registration.php"
     },
     "minimum-stability": "stable",
     "require": {
         "php": "^7.0.13"
     },
+    "prefer-stable" : true,
     "require-dev": {
+        "magento/product-community-edition": "2.3.5-p1",
         "dealerdirect/phpcodesniffer-composer-installer": "*",
         "phpcompatibility/php-compatibility": "*",
         "magento-ecg/coding-standard": "*"
@@ -29,5 +31,11 @@
         "psr-4": {
             "InXpress\\InXpressRating\\": ""
         }
-    }
+    },
+    "repositories": [
+        {
+            "type": "composer",
+            "url": "https://repo.magento.com/"
+        }
+    ]
 }

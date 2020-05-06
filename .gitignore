@@ -2,3 +2,13 @@ vendor
 .DS_Store
 .vscode
 .idea
+.github
+.editorconfig
+.htaccess
+.htaccess.sample
+.php_cs.dist
+.travis.yml.sample
+.user.ini
+COPYING.txt
+gruntfile.js.sample
+CHANGELOG.md
