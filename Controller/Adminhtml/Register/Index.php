@@ -14,8 +14,8 @@ class Index extends Action
 {
     protected $_urlInterface;
     protected $_scopeConfig;
+    protected $_configWriter;
     protected $_request;
-
 
     /**
      * Index constructor.
@@ -23,17 +23,20 @@ class Index extends Action
      * @param Context $context
      * @param \Magento\Framework\UrlInterface $urlInterface
      * @param \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig
+     * @param \Magento\Framework\App\Config\Storage\WriterInterface $configWriter
      * @param \Magento\Framework\App\Request\Http $request
      */
     public function __construct(
         Context $context,
         \Magento\Framework\UrlInterface $urlInterface,
         \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig,
+        \Magento\Framework\App\Config\Storage\WriterInterface $configWriter,
         \Magento\Framework\App\Request\Http $request
     ) {
         parent::__construct($context);
         $this->_urlInterface = $urlInterface;
         $this->_scopeConfig = $scopeConfig;
+        $this->_configWriter = $configWriter;
         $this->_request = $request;
     }
 
@@ -46,7 +49,7 @@ class Index extends Action
         $resultRedirect = $this->resultFactory->create(ResultFactory::TYPE_REDIRECT);
 
         $storeScope = \Magento\Store\Model\ScopeInterface::SCOPE_STORES;
-        $store_id = $this->_scopeConfig->getValue("system/inxpress/store_id", $storeScope);
+        $store_id = $this->_scopeConfig->getValue("system/carriers/dhlexpress/store_id", $storeScope);
 
         $params = $this->_request->getParams();
 
@@ -55,7 +58,12 @@ class Index extends Action
         } elseif (array_key_exists('registered', $params) && $params['registered'] == "true") {
             $store_id = $params['store_id'];
 
-            $this->_scopeConfig->setValue('system/inxpress/store_id', $store_id);
+            $this->_configWriter->save(
+                'system/carriers/dhlexpress/store_id',
+                $store_id,
+                $storeScope,
+                \Magento\Store\Model\Store::DEFAULT_STORE_ID
+            );
 
             $resultRedirect->setUrl($app_url . 'store/' . $store_id);
         } else {

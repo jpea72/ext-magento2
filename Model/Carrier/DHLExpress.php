@@ -1,11 +1,13 @@
 <?php
+
 namespace InXpress\InXpressRating\Model\Carrier;
 
 use Magento\Quote\Model\Quote\Address\RateRequest;
 use Magento\Shipping\Model\Rate\Result;
+use Magento\Shipping\Model\Config;
 
 class DHLExpress extends \Magento\Shipping\Model\Carrier\AbstractCarrier implements
-\Magento\Shipping\Model\Carrier\CarrierInterface
+    \Magento\Shipping\Model\Carrier\CarrierInterface
 {
     /**
      * @var string
@@ -47,84 +49,171 @@ class DHLExpress extends \Magento\Shipping\Model\Carrier\AbstractCarrier impleme
      */
     public function collectRates(RateRequest $request)
     {
-        //$this->_logger->critical("InXpress calculating rates", ['request' => $request]);
-
         if (!$this->getConfigFlag('active')) {
             return false;
         }
 
+        $shippingPrice = 0;
+
         /** @var \Magento\Shipping\Model\Rate\Result $result */
         $result = $this->_rateResultFactory->create();
 
-        if ($request->getDestCountryId()) {
-            $destCountry = $request->getDestCountryId();
-        } else {
-            $destCountry = self::USA_COUNTRY_ID;
-        }
-
+        $gateway = $this->getConfigData('gateway');
         $account = $this->getConfigData('account');
 
         if (!$account) {
             return false;
         }
 
-        $code = 'P';
-
-        $weight = $this->getTotalNumOfBoxes($request->getPackageWeight());
-
         if ($this->getConfigData('usekg')) {
             $weight *= 2.20462262;
         }
 
-        $price = $this->calcRate($account, $code, $destCountry, $weight, $request->getDestPostcode());
+        $products = array();
+        if ($request->getAllItems()) {
+            foreach ($request->getAllItems() as $item) {
+                if ($item->getProduct()->isVirtual() || $item->getParentItem()) {
+                    continue;
+                }
 
-        $this->_logger->critical("InXpress price", ['price' => $price]);
-        if ($price) {
-            $shippingPrice = $price['price'];
-        } else {
-            return false;
+                if ($item->getHasChildren() && $item->isShipSeparately()) {
+                    foreach ($item->getChildren() as $child) {
+                        if (!$child->getFreeShipping() && !$child->getProduct()->isVirtual()) {
+                            array_push($products, $child->toArray());
+                        }
+                    }
+                } else {
+                    array_push($products, array(
+                        "id" => $item->getProductId(),
+                        "sku" => $item->getSku(),
+                        "name" => $item->getName(),
+                        "weight" => floatval($item->getWeight()),
+                        "quantity" => $item->getQty()
+                    ));
+                }
+            }
+
+            $destination = array(
+                "name" => "",
+                "address1" => "",
+                "address2" => "",
+                "city" => "",
+                "province" => "",
+                "phone" => "",
+                "country" => $request->getDestCountryId(),
+                "postal_code" => $request->getDestPostcode()
+            );
+
+
+            $price = $this->calcRate($account, $gateway, $products, $destination);
+
+            $this->_logger->critical("InXpress price", ['price' => $price]);
+            if ($price) {
+                $shippingPrice = $price['price'];
+            } else {
+                return false;
+            }
         }
 
-        /** @var \Magento\Quote\Model\Quote\Address\RateResult\Method $method */
-        $method = $this->_rateMethodFactory->create();
+        if ($shippingPrice != 0) {
+            /** @var \Magento\Quote\Model\Quote\Address\RateResult\Method $method */
+            $method = $this->_rateMethodFactory->create();
 
-        $method->setCarrier('dhlexpress');
-        $method->setCarrierTitle($this->getConfigData('title'));
+            $method->setCarrier('dhlexpress');
+            $method->setCarrierTitle($this->getConfigData('title'));
 
-        $method->setMethod('dhlexpress');
-        $method->setMethodTitle($this->getConfigData('name'));
+            $method->setMethod('dhlexpress');
+            $method->setMethodTitle($this->getConfigData('name'));
 
-        $method->setPrice($shippingPrice);
-        $method->setCost($shippingPrice);
+            $method->setPrice($shippingPrice);
+            $method->setCost($shippingPrice);
 
-        $result->append($method);
+            $result->append($method);
+        }
 
         return $result;
     }
 
-    public function calcRate($account, $code, $country, $weight, $postal)
+    public function calcRate($account, $gateway, $products, $destination)
     {
-        $url = $url = 'https://www.ixpapi.com/ixpapp/rates.php?acc=' . $account . '&dst=' . $country . '&prd=' . $code . '&wgt=' . $weight . '&pst=' . $postal;
+        $storeScope = \Magento\Store\Model\Magento\Store\Model\ScopeInterface::SCOPE_STORES;
+        $store_id = $this->_scopeConfig->getValue("system/carriers/dhlexpress/store_id", $storeScope, \Magento\Store\Model\Store::DEFAULT_STORE_ID);
 
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
-        $data = curl_exec($ch);
-        curl_close($ch);
-        $xml = preg_replace("/(<\/?)(\w+):([^>]*>)/", "$1$2$3", $data);
-        $xml = simplexml_load_string($xml);
-        $json = json_encode($xml);
-        $responseArray = json_decode($json, true);
-        if (isset($responseArray['totalCharge'])) {
-            $response = array();
-            $response['price'] = $responseArray['totalCharge'];
-            $response['days'] = $responseArray['info']['baseCountryTransitDays'];
-            return $response;
+        $origin = array(
+            "name" => "",
+            "address1" => "",
+            "address2" => "",
+            "city" => "",
+            "province" => "",
+            "phone" => "",
+            "country" => $this->_scopeConfig->getValue(
+                Config::XML_PATH_ORIGIN_COUNTRY_ID,
+                $storeScope,
+                \Magento\Store\Model\Store::DEFAULT_STORE_ID
+            ),
+            "postal_code" => $this->_scopeConfig->getValue(
+                Config::XML_PATH_ORIGIN_POSTCODE,
+                $storeScope,
+                \Magento\Store\Model\Store::DEFAULT_STORE_ID
+            )
+        );
+
+        $url = "https://api.inxpressapps.com/carrier/v1/stores/" . $store_id . "/rates";
+
+        $payload = json_encode(array(
+            "account" => $account,
+            "gateway" => $gateway,
+            "services" => array(array(
+                "carrier" => "DHL",
+                "service" => "DHL Express"
+            )),
+            "origin" => $origin,
+            "destination" => $destination,
+            "products" => $products
+        ));
+
+        $this->_logger->critical("InXpress requesting rates", ['url' => $url, 'request' => $payload]);
+
+        $httpHeaders = new \Zend\Http\Headers();
+        $httpHeaders->addHeaders([
+            'Accept' => 'application/json',
+            'Content-Type' => 'application/json'
+        ]);
+
+        $request = new \Zend\Http\Request();
+        $request->setHeaders($httpHeaders);
+        $request->setUri($url);
+        $request->setMethod(\Zend\Http\Request::METHOD_POST);
+
+        $client = new \Zend\Http\Client();
+        $options = [
+            'adapter'   => 'Zend\Http\Client\Adapter\Curl',
+            'curloptions' => [CURLOPT_FOLLOWLOCATION => true],
+            'maxredirects' => 0,
+            'timeout' => 30
+        ];
+        $client->setOptions($options);
+        $client->setRawBody($payload);
+        $client->setEncType('application/json');
+
+        $response = $client->send($request);
+
+        if ($response->isSuccess()) {
+            $responseArray = json_decode($response, true);
+
+            $this->_logger->critical("InXpress success requesting rates", ['response' => $responseArray]);
+
+            if (isset($responseArray['totalCharge'])) {
+                $response = array();
+                $response['price'] = $responseArray['totalCharge'];
+                $response['days'] = $responseArray['info']['baseCountryTransitDays'];
+                return $response;
+            } else {
+                return false;
+            }
         } else {
+            $this->_logger->critical("InXpress error requesting rates", ['response' => $response->toString()]);
             return false;
         }
-
     }
 }
