@@ -21,6 +21,8 @@ jobs:
       run: composer validate
 
     - name: Install dependencies
+      env:
+        COMPOSER_AUTH: ${{secrets.COMPOSER_AUTH}}
       run: composer install --prefer-dist --no-progress --no-suggest
 
     - name: Run test suite
