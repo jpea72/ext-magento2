@@ -19,10 +19,14 @@ jobs:
 
     - name: Validate composer.json and composer.lock
       run: composer validate
+    
+    - name: Add composer auth
+      run: 'echo "$COMPOSER_AUTH" > auth.json'
+      shell: bash
+      env: 
+        COMPOSER_AUTH: ${{secrets.COMPOSER_AUTH}}
 
     - name: Install dependencies
-      env:
-        COMPOSER_AUTH: ${{secrets.COMPOSER_AUTH}}
       run: composer install --prefer-dist --no-progress --no-suggest
 
     - name: Run test suite
