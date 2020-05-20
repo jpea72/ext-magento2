@@ -27,7 +27,7 @@ jobs:
         COMPOSER_AUTH: ${{secrets.COMPOSER_AUTH}}
 
     - name: Install dependencies
-      run: composer install --prefer-dist --no-progress --no-suggest --ignore-platform-reqs
+      run: composer install --prefer-dist --no-progress --no-suggest --ignore-platform-reqs --no-autoloader
 
     - name: Run test suite
       run: composer run-script test
