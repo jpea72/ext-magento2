@@ -15,7 +15,7 @@
             </dhlexpress>
         </carriers>
         <carriers>
-            <dhlexpress>
+            <canpar>
                 <active>0</active>
                 <sallowspecific>0</sallowspecific>
                 <model>InXpress\InXpressRating\Model\Carrier\Canpar</model>
@@ -25,7 +25,7 @@
                 <type>I</type>
                 <usekg>0</usekg>
                 <specificerrmsg>This shipping method is not available. To use this shipping method, please contact us.</specificerrmsg>
-            </dhlexpress>
+            </canpar>
         </carriers>
     </default>
 </config>
