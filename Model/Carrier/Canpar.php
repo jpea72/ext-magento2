@@ -6,7 +6,7 @@ use Magento\Quote\Model\Quote\Address\RateRequest;
 use Magento\Shipping\Model\Rate\Result;
 use Magento\Shipping\Model\Config;
 
-class DHLExpress extends \Magento\Shipping\Model\Carrier\AbstractCarrier implements
+class Canpar extends \Magento\Shipping\Model\Carrier\AbstractCarrier implements
     \Magento\Shipping\Model\Carrier\CarrierInterface
 {
     /**
