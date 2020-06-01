@@ -64,10 +64,6 @@ class Canpar extends \Magento\Shipping\Model\Carrier\AbstractCarrier implements
             return false;
         }
 
-        if ($this->getConfigData('usekg')) {
-            $weight *= 2.20462262;
-        }
-
         $products = array();
         if ($request->getAllItems()) {
             foreach ($request->getAllItems() as $item) {
@@ -86,7 +82,7 @@ class Canpar extends \Magento\Shipping\Model\Carrier\AbstractCarrier implements
                         "id" => $item->getProductId(),
                         "sku" => $item->getSku(),
                         "name" => $item->getName(),
-                        "weight" => floatval($item->getWeight()),
+                        "weight" => itemWeight($item),
                         "quantity" => $item->getQty()
                     ));
                 }
@@ -131,6 +127,17 @@ class Canpar extends \Magento\Shipping\Model\Carrier\AbstractCarrier implements
         }
 
         return $result;
+    }
+
+    public function itemWeight($item)
+    {
+        $weight = floatval($item->getWeight());
+
+        if ($this->getConfigData('usekg')) {
+            $weight *= 2.20462262;
+        }
+
+        return $weight;
     }
 
     public function calcRate($account, $products, $destination)

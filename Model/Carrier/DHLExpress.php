@@ -65,10 +65,6 @@ class DHLExpress extends \Magento\Shipping\Model\Carrier\AbstractCarrier impleme
             return false;
         }
 
-        if ($this->getConfigData('usekg')) {
-            $weight *= 2.20462262;
-        }
-
         $products = array();
         if ($request->getAllItems()) {
             foreach ($request->getAllItems() as $item) {
@@ -87,7 +83,7 @@ class DHLExpress extends \Magento\Shipping\Model\Carrier\AbstractCarrier impleme
                         "id" => $item->getProductId(),
                         "sku" => $item->getSku(),
                         "name" => $item->getName(),
-                        "weight" => floatval($item->getWeight()),
+                        "weight" => itemWeight($item),
                         "quantity" => $item->getQty()
                     ));
                 }
@@ -132,6 +128,17 @@ class DHLExpress extends \Magento\Shipping\Model\Carrier\AbstractCarrier impleme
         }
 
         return $result;
+    }
+
+    public function itemWeight($item)
+    {
+        $weight = floatval($item->getWeight());
+
+        if ($this->getConfigData('usekg')) {
+            $weight *= 2.20462262;
+        }
+
+        return $weight;
     }
 
     public function calcRate($account, $gateway, $products, $destination)
