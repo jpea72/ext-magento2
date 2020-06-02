@@ -143,7 +143,7 @@ class DHLExpress extends \Magento\Shipping\Model\Carrier\AbstractCarrier impleme
 
     public function calcRate($account, $gateway, $products, $destination)
     {
-        $storeScope = \Magento\Store\Model\Magento\Store\Model\ScopeInterface::SCOPE_STORES;
+        $storeScope = \Magento\Store\Model\ScopeInterface::SCOPE_STORES;
         $store_id = $this->_scopeConfig->getValue("system/carriers/dhlexpress/store_id", $storeScope, \Magento\Store\Model\Store::DEFAULT_STORE_ID);
 
         $origin = array(
