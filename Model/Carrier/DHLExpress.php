@@ -83,7 +83,7 @@ class DHLExpress extends \Magento\Shipping\Model\Carrier\AbstractCarrier impleme
                         "id" => $item->getProductId(),
                         "sku" => $item->getSku(),
                         "name" => $item->getName(),
-                        "weight" => itemWeight($item),
+                        "weight" => $this->itemWeight($item),
                         "quantity" => $item->getQty()
                     ));
                 }
