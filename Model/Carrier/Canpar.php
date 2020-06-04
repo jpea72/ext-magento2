@@ -208,6 +208,7 @@ class Canpar extends \Magento\Shipping\Model\Carrier\AbstractCarrier implements
         ]);
         $client->setConfig(array('maxredirects' => 0, 'timeout' => 30));
         $client->setRawData($payload);
+        $client->setEncType('application/json');
         $response = $client->request(\Magento\Framework\HTTP\ZendClient::POST)->getBody();
 
         if ($response->isSuccess()) {
