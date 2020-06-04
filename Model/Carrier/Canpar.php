@@ -5,6 +5,7 @@ namespace InXpress\InXpressRating\Model\Carrier;
 use Magento\Quote\Model\Quote\Address\RateRequest;
 use Magento\Shipping\Model\Rate\Result;
 use Magento\Shipping\Model\Config;
+use Magento\Framework\HTTP\ZendClient;
 
 class Canpar extends \Magento\Shipping\Model\Carrier\AbstractCarrier implements
     \Magento\Shipping\Model\Carrier\CarrierInterface
@@ -15,11 +16,17 @@ class Canpar extends \Magento\Shipping\Model\Carrier\AbstractCarrier implements
     protected $_code = 'canpar';
 
     /**
+     * @var \Magento\Framework\HTTP\ZendClientFactory $clientFactory
+     */
+    protected $clientFactory;
+
+    /**
      * @param \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig
      * @param \Magento\Quote\Model\Quote\Address\RateResult\ErrorFactory $rateErrorFactory
      * @param \Psr\Log\LoggerInterface $logger
      * @param \Magento\Shipping\Model\Rate\ResultFactory $rateResultFactory
      * @param \Magento\Quote\Model\Quote\Address\RateResult\MethodFactory $rateMethodFactory
+     * @param \Magento\Framework\HTTP\ZendClientFactory $clientFactory
      * @param array $data
      */
     public function __construct(
@@ -27,11 +34,13 @@ class Canpar extends \Magento\Shipping\Model\Carrier\AbstractCarrier implements
         \Magento\Quote\Model\Quote\Address\RateResult\ErrorFactory $rateErrorFactory,
         \Psr\Log\LoggerInterface $logger,
         \Magento\Shipping\Model\Rate\ResultFactory $rateResultFactory,
+        \Magento\Framework\HTTP\ZendClientFactory $clientFactory,
         \Magento\Quote\Model\Quote\Address\RateResult\MethodFactory $rateMethodFactory,
         array $data = []
     ) {
         $this->_rateResultFactory = $rateResultFactory;
         $this->_rateMethodFactory = $rateMethodFactory;
+        $this->_clientFactory = $clientFactory;
         parent::__construct($scopeConfig, $rateErrorFactory, $logger, $data);
     }
 
@@ -189,29 +198,17 @@ class Canpar extends \Magento\Shipping\Model\Carrier\AbstractCarrier implements
 
         $this->_logger->critical("InXpress requesting rates", ['url' => $url, 'request' => $payload]);
 
-        $httpHeaders = new \Zend\Http\Headers();
-        $httpHeaders->addHeaders([
+        /** @var \Magento\Framework\HTTP\ZendClient $client */
+        $client = $this->_clientFactory->create();
+        $client->setUri($url);
+        $client->setMethod(ZendClient::POST);
+        $client->setHeaders([
             'Accept' => 'application/json',
             'Content-Type' => 'application/json'
         ]);
-
-        $request = new \Zend\Http\Request();
-        $request->setHeaders($httpHeaders);
-        $request->setUri($url);
-        $request->setMethod(\Zend\Http\Request::METHOD_POST);
-
-        $client = new \Zend\Http\Client();
-        $options = [
-            'adapter'   => 'Zend\Http\Client\Adapter\Curl',
-            'curloptions' => [CURLOPT_FOLLOWLOCATION => true],
-            'maxredirects' => 0,
-            'timeout' => 30
-        ];
-        $client->setOptions($options);
-        $client->setRawBody($payload);
-        $client->setEncType('application/json');
-
-        $response = $client->send($request);
+        $client->setConfig(array('maxredirects' => 0, 'timeout' => 30));
+        $client->setRawData($payload);
+        $response = $client->request(\Magento\Framework\HTTP\ZendClient::POST)->getBody();
 
         if ($response->isSuccess()) {
             $responseArray = json_decode($response, true);
