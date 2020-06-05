@@ -190,34 +190,34 @@ class DHLExpress extends \Magento\Shipping\Model\Carrier\AbstractCarrier impleme
 
         $this->_logger->critical("InXpress requesting rates", ['url' => $url, 'request' => $payload]);
 
-        /** @var \Magento\Framework\HTTP\ZendClient $client */
-        $client = $this->_clientFactory->create();
-        $client->setUri($url);
-        $client->setMethod(ZendClient::POST);
-        $client->setHeaders([
-            'Accept' => 'application/json',
-            'Content-Type' => 'application/json'
-        ]);
-        $client->setConfig(array('maxredirects' => 0, 'timeout' => 30));
-        $client->setRawData($payload);
-        $client->setEncType('application/json');
-        $response = $client->request(\Magento\Framework\HTTP\ZendClient::POST)->getBody();
+        try {
+            /** @var \Magento\Framework\HTTP\ZendClient $client */
+            $client = $this->_clientFactory->create();
+            $client->setUri($url);
+            $client->setMethod(ZendClient::POST);
+            $client->setHeaders([
+                'Accept' => 'application/json',
+                'Content-Type' => 'application/json'
+            ]);
+            $client->setConfig(array('maxredirects' => 0, 'timeout' => 30));
+            $client->setRawData($payload);
+            $client->setEncType('application/json');
+            $response = $client->request(\Magento\Framework\HTTP\ZendClient::POST)->getBody();
 
-        if ($response->isSuccess()) {
             $responseArray = json_decode($response, true);
+            $this->_logger->critical("InXpress response array", $responseArray);
 
-            $this->_logger->critical("InXpress success requesting rates", ['response' => $responseArray]);
-
-            if (isset($responseArray['totalCharge'])) {
-                $response = array();
-                $response['price'] = $responseArray['totalCharge'];
-                $response['days'] = $responseArray['info']['baseCountryTransitDays'];
-                return $response;
+            if (isset($responseArray["rates"][0]["total_price"])) {
+                $response1 = array();
+                $response1['price'] = $responseArray["rates"][0]["total_price"] / 100;
+                $response1['days'] = $responseArray["rates"][0]["display_sub_text"];
+                return $response1;
             } else {
+                $this->_logger->critical("InXpress error requesting rates", ['response' => $response->toString()]);
                 return false;
             }
-        } else {
-            $this->_logger->critical("InXpress error requesting rates", ['response' => $response->toString()]);
+        } catch (Exception $e) {
+            $this->_logger->critical("InXpress error requesting rates", ['response' => $e->getMessage()]);
             return false;
         }
     }
