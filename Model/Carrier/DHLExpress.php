@@ -74,29 +74,8 @@ class DHLExpress extends \Magento\Shipping\Model\Carrier\AbstractCarrier impleme
             return false;
         }
 
-        $products = array();
         if ($request->getAllItems()) {
-            foreach ($request->getAllItems() as $item) {
-                if ($item->getProduct()->isVirtual() || $item->getParentItem()) {
-                    continue;
-                }
-
-                if ($item->getHasChildren() && $item->isShipSeparately()) {
-                    foreach ($item->getChildren() as $child) {
-                        if (!$child->getFreeShipping() && !$child->getProduct()->isVirtual()) {
-                            array_push($products, $child->toArray());
-                        }
-                    }
-                } else {
-                    array_push($products, array(
-                        "id" => $item->getProductId(),
-                        "sku" => $item->getSku(),
-                        "name" => $item->getName(),
-                        "weight" => $this->itemWeight($item),
-                        "quantity" => $item->getQty()
-                    ));
-                }
-            }
+            $products = $this->buildProducts($request);
 
             $destination = array(
                 "name" => "",
@@ -137,6 +116,33 @@ class DHLExpress extends \Magento\Shipping\Model\Carrier\AbstractCarrier impleme
         }
 
         return $result;
+    }
+
+    public function buildProducts($request)
+    {
+        $products = array();
+        foreach ($request->getAllItems() as $item) {
+            if ($item->getProduct()->isVirtual() || $item->getParentItem()) {
+                continue;
+            }
+
+            if ($item->getHasChildren() && $item->isShipSeparately()) {
+                foreach ($item->getChildren() as $child) {
+                    if (!$child->getFreeShipping() && !$child->getProduct()->isVirtual()) {
+                        array_push($products, $child->toArray());
+                    }
+                }
+            } else {
+                array_push($products, array(
+                    "id" => $item->getProductId(),
+                    "sku" => $item->getSku(),
+                    "name" => $item->getName(),
+                    "weight" => $this->itemWeight($item),
+                    "quantity" => $item->getQty()
+                ));
+            }
+        }
+        return $products;
     }
 
     public function itemWeight($item)
@@ -216,7 +222,7 @@ class DHLExpress extends \Magento\Shipping\Model\Carrier\AbstractCarrier impleme
                 $this->_logger->critical("InXpress error requesting rates", ['response' => $response->toString()]);
                 return false;
             }
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             $this->_logger->critical("InXpress error requesting rates", ['response' => $e->getMessage()]);
             return false;
         }
