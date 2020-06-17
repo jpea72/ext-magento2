@@ -219,7 +219,7 @@ class DHLExpress extends \Magento\Shipping\Model\Carrier\AbstractCarrier impleme
                 $response1['days'] = $responseArray["rates"][0]["display_sub_text"];
                 return $response1;
             } else {
-                $this->_logger->critical("InXpress error requesting rates", ['response' => $response->toString()]);
+                $this->_logger->critical("InXpress error requesting rates", ['response' => $response]);
                 return false;
             }
         } catch (\Exception $e) {
