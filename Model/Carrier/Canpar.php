@@ -160,6 +160,11 @@ class Canpar extends \Magento\Shipping\Model\Carrier\AbstractCarrier implements
         $storeScope = \Magento\Store\Model\ScopeInterface::SCOPE_STORES;
         $store_id = $this->_scopeConfig->getValue("system/carriers/dhlexpress/store_id", $storeScope, \Magento\Store\Model\Store::DEFAULT_STORE_ID);
 
+        if (empty($store_id)) {
+            $this->_logger->critical("InXpress store id not found, please register on the portal", ['store_id' => $store_id]);
+            return false;
+        }
+
         $origin = array(
             "name" => "",
             "address1" => "",
