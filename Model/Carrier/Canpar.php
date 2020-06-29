@@ -155,6 +155,23 @@ class Canpar extends \Magento\Shipping\Model\Carrier\AbstractCarrier implements
         return $weight;
     }
 
+    public function addHandling($price)
+    {
+        $handling_type = $this->getConfigData('handling_type');
+        $handling_fee = $this->getConfigData('handling_fee');
+
+        if ( $handling_type === "F" && isset( $handling_fee )) {
+            $price += $handling_fee;
+        }
+
+        if ( $handling_type === "P" && isset( $handling_fee )) {
+            $multiplier = $handling_fee / 100 + 1.00;
+            $price *= $multiplier;
+        }
+
+        return $price;
+    }
+
     public function calcRate($account, $products, $destination)
     {
         $storeScope = \Magento\Store\Model\ScopeInterface::SCOPE_STORES;
@@ -228,7 +245,8 @@ class Canpar extends \Magento\Shipping\Model\Carrier\AbstractCarrier implements
 
             if (isset($responseArray["rates"][0]["total_price"])) {
                 $response1 = array();
-                $response1['price'] = $responseArray["rates"][0]["total_price"] / 100;
+                $before_handling_price = $responseArray["rates"][0]["total_price"] / 100;
+                $response1['price'] = $this->addHandling($before_handling_price);
                 $response1['days'] = $responseArray["rates"][0]["display_sub_text"];
                 return $response1;
             } else {

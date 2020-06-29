@@ -156,6 +156,23 @@ class DHLExpress extends \Magento\Shipping\Model\Carrier\AbstractCarrier impleme
         return $weight;
     }
 
+    public function addHandling($price)
+    {
+        $handling_type = $this->getConfigData('handling_type');
+        $handling_fee = $this->getConfigData('handling_fee');
+
+        if ( $handling_type === "F" && isset( $handling_fee )) {
+            $price += $handling_fee;
+        }
+
+        if ( $handling_type === "P" && isset( $handling_fee )) {
+            $multiplier = $handling_fee / 100 + 1.00;
+            $price *= $multiplier;
+        }
+
+        return $price;
+    }
+
     public function calcRate($account, $gateway, $products, $destination)
     {
         $storeScope = \Magento\Store\Model\ScopeInterface::SCOPE_STORES;
@@ -220,7 +237,8 @@ class DHLExpress extends \Magento\Shipping\Model\Carrier\AbstractCarrier impleme
 
             if (isset($responseArray["rates"][0]["total_price"])) {
                 $response1 = array();
-                $response1['price'] = $responseArray["rates"][0]["total_price"] / 100;
+                $before_handling_price = $responseArray["rates"][0]["total_price"] / 100;
+                $response1['price'] = $this->addHandling($before_handling_price);
                 $response1['days'] = $responseArray["rates"][0]["display_sub_text"];
                 return $response1;
             } else {
