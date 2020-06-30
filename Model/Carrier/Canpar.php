@@ -146,11 +146,23 @@ class Canpar extends \Magento\Shipping\Model\Carrier\AbstractCarrier implements
 
     public function itemWeight($item)
     {
-        $weight = floatval($item->getWeight());
+        $weight_in_uom = floatval($item->getWeight());
+        $weight_unit = 'lbs';
 
         if ($this->getConfigData('usekg')) {
-            $weight *= 2.20462262;
+            $weight_unit = 'kg';
         }
+
+        switch ( $weight_unit ) {
+			case 'lbs':
+				$weight = $weight_in_uom * 453.5920;
+				break;
+			case 'kg':
+				$weight = $weight_in_uom * 1000;
+				break;
+			default:
+				$weight = $weight_in_uom;
+		}
 
         return $weight;
     }
