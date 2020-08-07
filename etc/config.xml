@@ -28,17 +28,17 @@
             </canpar>
         </carriers>
         <carriers>
-            <ups>
+            <upsinxpress>
                 <active>0</active>
                 <sallowspecific>0</sallowspecific>
-                <model>InXpress\InXpressRating\Model\Carrier\UPS</model>
+                <model>InXpress\InXpressRating\Model\Carrier\UPSInxpress</model>
                 <name>InXpress UPS Shipping</name>
                 <account></account>
-                <title>UPS</title>
+                <title>UPS by InXpress</title>
                 <type>I</type>
                 <usekg>0</usekg>
                 <specificerrmsg>This shipping method is not available. To use this shipping method, please contact us.</specificerrmsg>
-            </ups>
+            </upsinxpress>
         </carriers>
     </default>
 </config>

@@ -7,13 +7,13 @@ use Magento\Shipping\Model\Rate\Result;
 use Magento\Shipping\Model\Config;
 use Magento\Framework\HTTP\ZendClient;
 
-class UPS extends \Magento\Shipping\Model\Carrier\AbstractCarrier implements
+class UPSInxpress extends \Magento\Shipping\Model\Carrier\AbstractCarrier implements
     \Magento\Shipping\Model\Carrier\CarrierInterface
 {
     /**
      * @var string
      */
-    protected $_code = 'ups';
+    protected $_code = 'upsinxpress';
 
     /**
      * @var \Magento\Framework\HTTP\ZendClientFactory $clientFactory
@@ -49,7 +49,7 @@ class UPS extends \Magento\Shipping\Model\Carrier\AbstractCarrier implements
      */
     public function getAllowedMethods()
     {
-        return ['ups' => $this->getConfigData('name')];
+        return ['upsinxpress' => $this->getConfigData('name')];
     }
 
     /**
@@ -81,7 +81,7 @@ class UPS extends \Magento\Shipping\Model\Carrier\AbstractCarrier implements
                 "name" => "",
                 "address1" => "",
                 "address2" => "",
-                "city" => "",
+                "city" => $request->getDestCity(),
                 "province" => "",
                 "phone" => "",
                 "country" => $request->getDestCountryId(),
@@ -103,10 +103,10 @@ class UPS extends \Magento\Shipping\Model\Carrier\AbstractCarrier implements
             /** @var \Magento\Quote\Model\Quote\Address\RateResult\Method $method */
             $method = $this->_rateMethodFactory->create();
 
-            $method->setCarrier('ups');
+            $method->setCarrier('upsinxpress');
             $method->setCarrierTitle($this->getConfigData('title'));
 
-            $method->setMethod('ups');
+            $method->setMethod('upsinxpress');
             $method->setMethodTitle($this->getConfigData('name'));
 
             $method->setPrice($shippingPrice);
@@ -187,7 +187,11 @@ class UPS extends \Magento\Shipping\Model\Carrier\AbstractCarrier implements
             "name" => "",
             "address1" => "",
             "address2" => "",
-            "city" => "",
+            "city" => $this->_scopeConfig->getValue(
+                Config::XML_PATH_ORIGIN_CITY,
+                $storeScope,
+                \Magento\Store\Model\Store::DEFAULT_STORE_ID
+            ),
             "province" => "",
             "phone" => "",
             "country" => $this->_scopeConfig->getValue(
