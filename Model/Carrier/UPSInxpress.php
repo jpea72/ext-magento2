@@ -89,30 +89,32 @@ class UPSInxpress extends \Magento\Shipping\Model\Carrier\AbstractCarrier implem
             );
 
 
-            $price = $this->calcRate($account, $gateway, $products, $destination);
+            $prices = $this->calcRate($account, $gateway, $products, $destination);
 
-            $this->_logger->critical("InXpress price", ['price' => $price]);
-            if ($price) {
-                $shippingPrice = $price['price'];
-            } else {
-                return false;
+            foreach($prices as $price) {
+                $this->_logger->critical("InXpress price", ['price' => $prices]);
+                if ($price) {
+                    $shippingPrice = $price['price'];
+                } else {
+                    return false;
+                }
+
+                if ($shippingPrice != 0) {
+                    /** @var \Magento\Quote\Model\Quote\Address\RateResult\Method $method */
+                    $method = $this->_rateMethodFactory->create();
+
+                    $method->setCarrier('upsinxpress');
+                    $method->setCarrierTitle($this->getConfigData('title'));
+
+                    $method->setMethod('upsinxpress');
+                    $method->setMethodTitle($price['service']);
+
+                    $method->setPrice($shippingPrice);
+                    $method->setCost($shippingPrice);
+
+                    $result->append($method);
+                }
             }
-        }
-
-        if ($shippingPrice != 0) {
-            /** @var \Magento\Quote\Model\Quote\Address\RateResult\Method $method */
-            $method = $this->_rateMethodFactory->create();
-
-            $method->setCarrier('upsinxpress');
-            $method->setCarrierTitle($this->getConfigData('title'));
-
-            $method->setMethod('upsinxpress');
-            $method->setMethodTitle($this->getConfigData('name'));
-
-            $method->setPrice($shippingPrice);
-            $method->setCost($shippingPrice);
-
-            $result->append($method);
         }
 
         return $result;
@@ -240,11 +242,17 @@ class UPSInxpress extends \Magento\Shipping\Model\Carrier\AbstractCarrier implem
             $this->_logger->critical("InXpress response array", $responseArray);
 
             if (isset($responseArray["rates"][0]["total_price"])) {
-                $response1 = array();
-                $before_handling_price = $responseArray["rates"][0]["total_price"] / 100;
-                $response1['price'] = $this->addHandling($before_handling_price);
-                $response1['days'] = $responseArray["rates"][0]["display_sub_text"];
-                return $response1;
+                $responses = array();
+                foreach($responseArray["rates"] as $rate) {
+                    $response = array();
+
+                    $before_handling_price = $rate["total_price"] / 100;
+                    $response['price'] = $this->addHandling($before_handling_price);
+                    $response['days'] = $rate["display_sub_text"];
+                    $response['service'] = $rate["display_text"];
+                    array_push($responses, $response);
+                }
+                return $responses;
             } else {
                 $this->_logger->critical("InXpress error requesting rates", ['response' => $response]);
                 return false;
