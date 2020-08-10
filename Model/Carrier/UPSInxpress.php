@@ -91,28 +91,30 @@ class UPSInxpress extends \Magento\Shipping\Model\Carrier\AbstractCarrier implem
 
             $prices = $this->calcRate($account, $gateway, $products, $destination);
 
-            foreach($prices as $price) {
-                $this->_logger->critical("InXpress price", ['price' => $prices]);
-                if ($price) {
-                    $shippingPrice = $price['price'];
-                } else {
-                    return false;
-                }
+            if ($prices) {
+                foreach($prices as $price) {
+                    $this->_logger->critical("InXpress price", ['price' => $prices]);
+                    if ($price) {
+                        $shippingPrice = $price['price'];
+                    } else {
+                        return false;
+                    }
 
-                if ($shippingPrice != 0) {
-                    /** @var \Magento\Quote\Model\Quote\Address\RateResult\Method $method */
-                    $method = $this->_rateMethodFactory->create();
+                    if ($shippingPrice != 0) {
+                        /** @var \Magento\Quote\Model\Quote\Address\RateResult\Method $method */
+                        $method = $this->_rateMethodFactory->create();
 
-                    $method->setCarrier('upsinxpress');
-                    $method->setCarrierTitle($this->getConfigData('title'));
+                        $method->setCarrier('upsinxpress');
+                        $method->setCarrierTitle($this->getConfigData('title'));
 
-                    $method->setMethod('upsinxpress');
-                    $method->setMethodTitle($price['service']);
+                        $method->setMethod('upsinxpress');
+                        $method->setMethodTitle($price['service']);
 
-                    $method->setPrice($shippingPrice);
-                    $method->setCost($shippingPrice);
+                        $method->setPrice($shippingPrice);
+                        $method->setCost($shippingPrice);
 
-                    $result->append($method);
+                        $result->append($method);
+                    }
                 }
             }
         }
