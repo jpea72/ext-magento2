@@ -88,30 +88,36 @@ class Canpar extends \Magento\Shipping\Model\Carrier\AbstractCarrier implements
             );
 
 
-            $price = $this->calcRate($account, $products, $destination);
+            $prices = $this->calcRate($account, $products, $destination);
 
-            $this->_logger->critical("InXpress price", ['price' => $price]);
-            if ($price) {
-                $shippingPrice = $price['price'];
-            } else {
+            if (!$prices) {
                 return false;
             }
-        }
 
-        if ($shippingPrice != 0) {
-            /** @var \Magento\Quote\Model\Quote\Address\RateResult\Method $method */
-            $method = $this->_rateMethodFactory->create();
+            foreach($prices as $price) {
+                $this->_logger->critical("InXpress price", ['price' => $prices]);
+                if ($price) {
+                    $shippingPrice = $price['price'];
+                } else {
+                    return false;
+                }
 
-            $method->setCarrier('canpar');
-            $method->setCarrierTitle($this->getConfigData('title'));
+                if ($shippingPrice != 0) {
+                    /** @var \Magento\Quote\Model\Quote\Address\RateResult\Method $method */
+                    $method = $this->_rateMethodFactory->create();
 
-            $method->setMethod('canpar');
-            $method->setMethodTitle($this->getConfigData('name'));
+                    $method->setCarrier('canpar');
+                    $method->setCarrierTitle($this->getConfigData('title'));
 
-            $method->setPrice($shippingPrice);
-            $method->setCost($shippingPrice);
+                    $method->setMethod('canpar');
+                    $method->setMethodTitle($price['service']);
 
-            $result->append($method);
+                    $method->setPrice($shippingPrice);
+                    $method->setCost($shippingPrice);
+
+                    $result->append($method);
+                }
+            }
         }
 
         return $result;
@@ -244,11 +250,17 @@ class Canpar extends \Magento\Shipping\Model\Carrier\AbstractCarrier implements
             $this->_logger->critical("InXpress response array", $responseArray);
 
             if (isset($responseArray["rates"][0]["total_price"])) {
-                $response1 = array();
-                $before_handling_price = $responseArray["rates"][0]["total_price"] / 100;
-                $response1['price'] = $this->addHandling($before_handling_price);
-                $response1['days'] = $responseArray["rates"][0]["display_sub_text"];
-                return $response1;
+                $responses = array();
+                foreach($responseArray["rates"] as $rate) {
+                    $response = array();
+
+                    $before_handling_price = $rate["total_price"] / 100;
+                    $response['price'] = $this->addHandling($before_handling_price);
+                    $response['days'] = $rate["display_sub_text"];
+                    $response['service'] = $rate["display_text"];
+                    array_push($responses, $response);
+                }
+                return $responses;
             } else {
                 $this->_logger->critical("InXpress error requesting rates", ['response' => $response]);
                 return false;
