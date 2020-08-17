@@ -34,7 +34,6 @@
                 <account></account>
                 <title>UPS by InXpress</title>
                 <type>I</type>
-                <usekg>0</usekg>
                 <specificerrmsg>This shipping method is not available. To use this shipping method, please contact us.</specificerrmsg>
             </upsinxpress>
         </carriers>
