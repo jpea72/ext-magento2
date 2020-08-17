@@ -147,13 +147,26 @@ class DHLExpress extends \Magento\Shipping\Model\Carrier\AbstractCarrier impleme
 
     public function itemWeight($item)
     {
-        $weight = floatval($item->getWeight());
+        $weight_in_uom = floatval($item->getWeight());
+        $weight_unit = $this->getWeightUnit();
 
-        if ($this->getConfigData('usekg')) {
-            $weight *= 2.20462262;
+        switch ( $weight_unit ) {
+            case 'lbs':
+                $weight = $weight_in_uom * 453.5920;
+                break;
+            case 'kgs':
+                $weight = $weight_in_uom * 1000;
+                break;
+            default:
+                $weight = $weight_in_uom;
         }
 
         return $weight;
+    }
+
+    public function getWeightUnit()
+    {
+        return $this->_scopeConfig->getValue('general/locale/weight_unit', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
     }
 
     public function addHandling($price)
