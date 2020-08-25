@@ -226,7 +226,7 @@ class DHLExpress extends \Magento\Shipping\Model\Carrier\AbstractCarrier impleme
             )),
             "origin" => $origin,
             "destination" => $destination,
-            "products" => $products
+            "items" => $products
         ));
 
         $this->_logger->critical("InXpress requesting rates", ['url' => $url, 'request' => $payload]);
