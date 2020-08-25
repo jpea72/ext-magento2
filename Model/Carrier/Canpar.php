@@ -240,7 +240,7 @@ class Canpar extends \Magento\Shipping\Model\Carrier\AbstractCarrier implements
             ),
             "origin" => $origin,
             "destination" => $destination,
-            "products" => $products
+            "items" => $products
         ));
 
         $this->_logger->critical("InXpress requesting rates", ['url' => $url, 'request' => $payload]);
