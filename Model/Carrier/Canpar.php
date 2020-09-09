@@ -109,7 +109,7 @@ class Canpar extends \Magento\Shipping\Model\Carrier\AbstractCarrier implements
                     $method->setCarrier('canpar');
                     $method->setCarrierTitle($this->getConfigData('title'));
 
-                    $method->setMethod('canpar');
+                    $method->setMethod($price['service_code']);
                     $method->setMethodTitle($price['service']);
 
                     $method->setPrice($shippingPrice);
@@ -271,6 +271,7 @@ class Canpar extends \Magento\Shipping\Model\Carrier\AbstractCarrier implements
                     $response['price'] = $this->addHandling($before_handling_price);
                     $response['days'] = $rate["display_sub_text"];
                     $response['service'] = $rate["display_text"];
+                    $response['service_code'] = $rate["service_code"];
                     array_push($responses, $response);
                 }
                 return $responses;
