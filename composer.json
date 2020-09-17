@@ -20,7 +20,6 @@
     },
     "prefer-stable" : true,
     "require-dev": {
-        "magento/product-community-edition": "2.3.5-p1",
         "dealerdirect/phpcodesniffer-composer-installer": "*",
         "phpcompatibility/php-compatibility": "*",
         "magento-ecg/coding-standard": "*"
