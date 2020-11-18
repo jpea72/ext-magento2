@@ -25,5 +25,17 @@
                 <specificerrmsg>This shipping method is not available. To use this shipping method, please contact us.</specificerrmsg>
             </canpar>
         </carriers>
+        <carriers>
+            <upsinxpress>
+                <active>0</active>
+                <sallowspecific>0</sallowspecific>
+                <model>InXpress\InXpressRating\Model\Carrier\UPSInxpress</model>
+                <name>InXpress UPS Shipping</name>
+                <account></account>
+                <title>UPS by InXpress</title>
+                <type>I</type>
+                <specificerrmsg>This shipping method is not available. To use this shipping method, please contact us.</specificerrmsg>
+            </upsinxpress>
+        </carriers>
     </default>
 </config>
