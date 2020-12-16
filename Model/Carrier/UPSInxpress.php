@@ -107,7 +107,7 @@ class UPSInxpress extends \Magento\Shipping\Model\Carrier\AbstractCarrier implem
                         $method->setCarrier('upsinxpress');
                         $method->setCarrierTitle($this->getConfigData('title'));
 
-                        $method->setMethod('upsinxpress');
+                        $method->setMethod(strtolower($price['service_code']));
                         $method->setMethodTitle($price['service']);
 
                         $method->setPrice($shippingPrice);
