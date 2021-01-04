@@ -82,7 +82,7 @@ class UPSInxpress extends \Magento\Shipping\Model\Carrier\AbstractCarrier implem
                 "address1" => "",
                 "address2" => "",
                 "city" => $request->getDestCity(),
-                "province" => "",
+                "province" => $request->getDestRegionCode(),
                 "phone" => "",
                 "country" => $request->getDestCountryId(),
                 "postal_code" => $request->getDestPostcode()
