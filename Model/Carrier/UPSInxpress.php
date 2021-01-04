@@ -6,6 +6,7 @@ use Magento\Quote\Model\Quote\Address\RateRequest;
 use Magento\Shipping\Model\Rate\Result;
 use Magento\Shipping\Model\Config;
 use Magento\Framework\HTTP\ZendClient;
+use Magento\Directory\Model\RegionFactory;
 
 class UPSInxpress extends \Magento\Shipping\Model\Carrier\AbstractCarrier implements
     \Magento\Shipping\Model\Carrier\CarrierInterface
@@ -36,11 +37,13 @@ class UPSInxpress extends \Magento\Shipping\Model\Carrier\AbstractCarrier implem
         \Magento\Shipping\Model\Rate\ResultFactory $rateResultFactory,
         \Magento\Framework\HTTP\ZendClientFactory $clientFactory,
         \Magento\Quote\Model\Quote\Address\RateResult\MethodFactory $rateMethodFactory,
+        \Magento\Directory\Model\RegionFactory $regionFactory,
         array $data = []
     ) {
         $this->_rateResultFactory = $rateResultFactory;
         $this->_rateMethodFactory = $rateMethodFactory;
         $this->_clientFactory = $clientFactory;
+        $this->_regionFactory = $regionFactory;
         parent::__construct($scopeConfig, $rateErrorFactory, $logger, $data);
     }
 
@@ -50,6 +53,16 @@ class UPSInxpress extends \Magento\Shipping\Model\Carrier\AbstractCarrier implem
     public function getAllowedMethods()
     {
         return ['upsinxpress' => $this->getConfigData('name')];
+    }
+
+    /**
+     * @param $regionId
+     * @return String
+     */
+    public function getRegionCode( $regionId ){
+        $region = $this->_regionFactory->create()->load($regionId);
+        $regionArray = $region->getData();
+	    return $regionArray['code'];
     }
 
     /**
@@ -200,6 +213,12 @@ class UPSInxpress extends \Magento\Shipping\Model\Carrier\AbstractCarrier implem
             return false;
         }
 
+        $regionCode = $this->getRegionCode( $this->_scopeConfig->getValue(
+            Config::XML_PATH_ORIGIN_REGION_ID,
+            $storeScope,
+            \Magento\Store\Model\Store::DEFAULT_STORE_ID )
+	     );
+
         $origin = array(
             "name" => "",
             "address1" => "",
@@ -209,7 +228,7 @@ class UPSInxpress extends \Magento\Shipping\Model\Carrier\AbstractCarrier implem
                 $storeScope,
                 \Magento\Store\Model\Store::DEFAULT_STORE_ID
             ),
-            "province" => "",
+	        "province" => $regionCode,
             "phone" => "",
             "country" => $this->_scopeConfig->getValue(
                 Config::XML_PATH_ORIGIN_COUNTRY_ID,
